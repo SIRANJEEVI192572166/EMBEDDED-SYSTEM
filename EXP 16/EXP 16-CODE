@@ -1,0 +1,83 @@
+#include <reg51.h>
+
+bit tx_done;
+
+/* Serial Interrupt Service Routine */
+void serial_ISR(void) interrupt 4
+{
+    char ch;
+
+    /* Transmit interrupt */
+    if (TI)
+    {
+        TI = 0;
+        tx_done = 1;
+    }
+
+    /* Receive interrupt */
+    if (RI)
+    {
+        RI = 0;
+        ch = SBUF;
+
+        /* Echo received character */
+        tx_done = 0;
+        SBUF = ch;
+
+        while (tx_done == 0);
+    }
+}
+
+/* Send one character */
+void send_char(char ch)
+{
+    tx_done = 0;
+    SBUF = ch;
+
+    while (tx_done == 0);
+}
+
+/* Send string */
+void send_string(char *str)
+{
+    while (*str)
+    {
+        send_char(*str);
+        str++;
+    }
+}
+
+/* Delay */
+void delay(void)
+{
+    unsigned int i;
+
+    for (i = 0; i < 30000; i++);
+}
+
+void main(void)
+{
+    /* Serial Port */
+    SCON = 0x50;          /* Mode 1, 8-bit UART, Receiver Enable */
+
+    /* Timer 1 */
+    TMOD = 0x20;          /* Timer 1, Mode 2 */
+    TH1 = 0xFD;            /* 9600 baud */
+    TL1 = 0xFD;
+
+    TR1 = 1;               /* Start Timer 1 */
+
+    /* Serial Interrupt Enable */
+    ES = 1;
+    EA = 1;
+
+    TI = 0;
+    RI = 0;
+
+    while (1)
+    {
+        send_string("Hello World\r\n");
+
+        delay();
+    }
+}
