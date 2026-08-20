@@ -1,0 +1,25 @@
+#include <reg51.h> 
+sbit PWM = P1^0; 
+unsigned char count = 0; 
+unsigned char duty = 50;   // Change this value (0–200) 
+void timer0_ISR(void) interrupt 1 
+{ 
+TH0 = 0xFC;      // Reload for 1ms delay 
+TL0 = 0x66; 
+count++; 
+if(count < duty) 
+PWM = 1;     // ON time 
+else 
+PWM = 0;     // OFF time 
+if(count >= 200) // Total period = 200ms 
+count = 0; 
+} 
+void main() 
+{ 
+TMOD = 0x01;     // Timer0 Mode 1 (16-bit) 
+TH0  = 0xFC;     // 1ms preload 
+TL0  = 0x66; 
+IE   = 0x82;     // EA = 1, ET0 = 1 
+TR0  = 1;        // Start Timer0 
+while(1); 
+}
