@@ -1,0 +1,28 @@
+#include <systemc.h> 
+SC_MODULE(counting_semaphore) { 
+int sem; 
+void task() { 
+while(true) { 
+wait(1, SC_SEC); 
+if(sem > 0) { 
+sem--; 
+cout << "Task Accessing Resource at " 
+<< sc_time_stamp() 
+<< " Remaining: " << sem << endl; 
+wait(2, SC_SEC); 
+sem++; 
+} 
+} 
+} 
+SC_CTOR(counting_semaphore) { 
+sem = 2; 
+SC_THREAD(task); 
+SC_THREAD(task); 
+SC_THREAD(task); 
+} 
+}; 
+int sc_main(int argc, char* argv[]) { 
+counting_semaphore obj("Counting"); 
+sc_start(10, SC_SEC); 
+return 0; 
+}
